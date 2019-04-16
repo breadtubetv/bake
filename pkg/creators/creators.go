@@ -14,7 +14,7 @@ type Creator struct {
 	permalink  string
 	slug       string
 	tags       []string
-	Providers  []providers.Provider
+	Providers  map[string]providers.Provider
 	bakeConfig *viper.Viper
 }
 
