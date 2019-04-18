@@ -5,8 +5,8 @@ import (
 	"log"
 	"os"
 
-	"github.com/breadtubetv/breadtubetv/bake/providers"
-	"github.com/breadtubetv/breadtubetv/bake/util"
+	"github.com/breadtubetv/bake/providers"
+	"github.com/breadtubetv/bake/util"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
