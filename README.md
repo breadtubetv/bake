@@ -1,4 +1,4 @@
-# Bake CLI
+# BreadTube Bake CLI
 
 The `bake` cli is a companion CLI to the [breadtubetv/breadtubetv](https://github.com/breadtubetv/breadtubetv) project. 
 
