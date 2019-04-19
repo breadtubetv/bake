@@ -79,14 +79,17 @@ func FetchDetails(channelURL *util.URL) (util.Provider, error) {
 	}
 
 	channelName := ""
+	channelDescription := ""
 	channelSubscriberCount := uint64(0)
 	for _, item := range response.Items {
 		channelName = item.Snippet.Title
+		channelDescription = item.Snippet.Description
 		channelSubscriberCount = item.Statistics.SubscriberCount
 		break
 	}
 
 	return util.Provider{
+		Description: channelDescription,
 		Name:        channelName,
 		URL:         channelURL,
 		Slug:        id,

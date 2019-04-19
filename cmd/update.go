@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path"
 
 	"github.com/breadtubetv/bake/providers"
 	"github.com/breadtubetv/bake/util"
@@ -32,7 +33,7 @@ func init() {
 }
 
 func updateChannelList(args []string) {
-	dataDir := fmt.Sprintf("%s/data/channels", os.ExpandEnv(viper.GetString("projectRoot")))
+	dataDir := path.Join(os.ExpandEnv(viper.GetString("projectRoot")), "/data/channels")
 	channels := util.LoadChannels(dataDir)
 
 	for _, channelSlug := range args {
@@ -60,7 +61,8 @@ func updateChannelList(args []string) {
 }
 
 func updateChannels() {
-	channels := util.LoadChannels(fmt.Sprintf("%s/data/channels", os.ExpandEnv(viper.GetString("projectRoot"))))
+	dataDir := path.Join(os.ExpandEnv(viper.GetString("projectRoot")), "/data/channels")
+	channels := util.LoadChannels(dataDir)
 
 	for _, channel := range channels {
 		url := channel.YouTubeURL()
@@ -73,7 +75,7 @@ func updateChannels() {
 
 		channel.Providers["youtube"] = youtube
 
-		err = util.SaveChannel(&channel, "../data/channels")
+		err = util.SaveChannel(&channel, dataDir)
 		if err != nil {
 			log.Printf("Failed to update channel %s (%s), error: %v", channel.Name, channel.Slug, err)
 		}
