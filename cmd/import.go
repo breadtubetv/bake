@@ -6,7 +6,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/breadtubetv/breadtubetv/bake/util"
+	"github.com/breadtubetv/bake/util"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )

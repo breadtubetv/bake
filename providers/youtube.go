@@ -16,7 +16,7 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/breadtubetv/breadtubetv/bake/util"
+	"github.com/breadtubetv/bake/util"
 	"golang.org/x/net/context"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
