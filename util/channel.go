@@ -328,7 +328,7 @@ func CreateChannelPage(channel *Channel, projectRoot string) error {
 
 	channelPage := &ChannelPage{
 		Title:      channel.Name,
-		TypeString: "channels",
+		TypeString: "channel",
 		Channel:    channel.Slug,
 		Menu: struct {
 			Main struct {
