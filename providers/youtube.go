@@ -185,6 +185,8 @@ func importChannel(slug string, channelURL *util.URL, projectRoot string) {
 		log.Fatalf("Error saving channel '%s': %v", slug, err)
 	}
 
+	util.CreateChannelVideoFolder(channel, projectRoot)
+
 	err = util.CreateChannelPage(channel, projectRoot)
 	if err != nil {
 		log.Printf("Unable to create channel page for %s, please create manually.", slug)
