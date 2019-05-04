@@ -52,4 +52,7 @@ workflows:
   lint_and_build:
     jobs:
       - lint
-      - build
+      - test
+      - build:
+          requires:
+            - test
