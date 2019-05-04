@@ -1,0 +1,43 @@
+version: 2.1
+
+environment: &environment
+  environment:
+    - PROJECT_NAME: bake
+    - GO111MODULE: on
+
+defaults: &defaults
+  working_directory: /tmp/build
+  docker:
+  - image: golang:1.12.4
+
+workflows:
+  lint_and_test:
+    jobs:
+      - lint
+      - test
+
+jobs:
+  lint:
+  <<: *defaults
+    steps:
+      - checkout
+      - run: go get -u golang.org/x/golint
+      - run:
+          name: Run gofmt, enforce formatting
+          command: "! go fmt ./... 2>&1 | read"
+      - run:
+          name: Run golint, enforce styles
+          command: "golint -set_exit_status ./..."
+
+  build:
+  <<: *defaults
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - go-mod-v4-{{ checksum "go.sum" }}
+      - run: "GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build ."
+      - save_cache:
+          key: go-mod-v4-{{ checksum "go.sum" }}
+          paths:
+            - "/go/pkg/mod"
