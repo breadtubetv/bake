@@ -1,5 +1,3 @@
-version: 2.1
-
 environment: &environment
   environment:
     - PROJECT_NAME: bake
@@ -8,17 +6,13 @@ environment: &environment
 defaults: &defaults
   working_directory: /tmp/build
   docker:
-  - image: golang:1.12.4
+    - image: golang:1.12.4
+  <<: *environment
 
-workflows:
-  lint_and_test:
-    jobs:
-      - lint
-      - build
-
+version: 2.1
 jobs:
   lint:
-  <<: *defaults
+    <<: *defaults
     steps:
       - checkout
       - run: go get -u golang.org/x/golint
@@ -30,7 +24,7 @@ jobs:
           command: "golint -set_exit_status ./..."
 
   build:
-  <<: *defaults
+    <<: *defaults
     steps:
       - checkout
       - restore_cache:
@@ -41,3 +35,9 @@ jobs:
           key: go-mod-v4-{{ checksum "go.sum" }}
           paths:
             - "/go/pkg/mod"
+
+workflows:
+  lint_and_build:
+    jobs:
+      - lint
+      - build
