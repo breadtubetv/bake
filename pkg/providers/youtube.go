@@ -16,7 +16,7 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/breadtubetv/breadtubetv/bake/util"
+	"github.com/breadtubetv/bake/util"
 	"golang.org/x/net/context"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
@@ -79,14 +79,17 @@ func FetchDetails(channelURL *util.URL) (util.Provider, error) {
 	}
 
 	channelName := ""
+	channelDescription := ""
 	channelSubscriberCount := uint64(0)
 	for _, item := range response.Items {
 		channelName = item.Snippet.Title
+		channelDescription = item.Snippet.Description
 		channelSubscriberCount = item.Statistics.SubscriberCount
 		break
 	}
 
 	return util.Provider{
+		Description: channelDescription,
 		Name:        channelName,
 		URL:         channelURL,
 		Slug:        id,
@@ -181,6 +184,8 @@ func importChannel(slug string, channelURL *util.URL, projectRoot string) {
 	if err != nil {
 		log.Fatalf("Error saving channel '%s': %v", slug, err)
 	}
+
+	util.CreateChannelVideoFolder(channel, projectRoot)
 
 	err = util.CreateChannelPage(channel, projectRoot)
 	if err != nil {
