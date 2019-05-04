@@ -14,7 +14,7 @@ workflows:
   lint_and_test:
     jobs:
       - lint
-      - test
+      - build
 
 jobs:
   lint:
