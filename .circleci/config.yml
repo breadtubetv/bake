@@ -23,6 +23,18 @@ jobs:
           name: Run golint, enforce styles
           command: "golint -set_exit_status ./..."
 
+  test:
+    <<: *defaults
+    environment:
+      TEST_RESULTS: /tmp/test-results
+    steps:
+      - checkout
+      - run: mkdir -p $TEST_RESULTS
+      - run: "go get -u gotest.tools/gotestsum"
+      - run: "gotestsum --junitfile $TEST_RESULTS/unit-tests.xml"
+      - store_test_results:
+          path: /tmp/test-results
+
   build:
     <<: *defaults
     steps:
