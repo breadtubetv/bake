@@ -20,8 +20,8 @@ type Creator struct {
 
 var config *viper.Viper
 
-// Config allows package user to pass a viper configuation to the pkg
-func Config(conf *viper.Viper) error {
+// AddConfig allows package user to pass a viper configuation to the pkg
+func AddConfig(conf *viper.Viper) error {
 	config = conf
 }
 
@@ -29,10 +29,4 @@ func Config(conf *viper.Viper) error {
 // slug, loads the creator, and returns its creator object.
 func FindCreatorBySlug(slug string) *Creator {
 	fmt.Print(slug)
-}
-
-// AddConfig allows the caller to provide a configuration
-func (c *Creator) AddConfig(config *viper.Viper) {
-	c.bakeConfig = config
-	fmt.Println(config.AllSettings())
 }
