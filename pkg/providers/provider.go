@@ -7,6 +7,8 @@ type Provider struct {
 	name         string
 }
 
+type Providers struct{}
+
 // ProviderI specifies the minimum methods a provider needs
 // to implement.
 type ProviderI interface {
