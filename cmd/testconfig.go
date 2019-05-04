@@ -17,7 +17,7 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/breadtubetv/breadtubetv/bake/pkg/creators"
+	"github.com/breadtubetv/bake/pkg/creators"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )

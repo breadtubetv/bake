@@ -6,7 +6,7 @@ import (
 	"os"
 	"path"
 
-	"github.com/breadtubetv/bake/providers"
+	"github.com/breadtubetv/bake/pkg/providers"
 	"github.com/breadtubetv/bake/util"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
