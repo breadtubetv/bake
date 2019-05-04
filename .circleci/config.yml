@@ -15,7 +15,7 @@ jobs:
     <<: *defaults
     steps:
       - checkout
-      - run: go get -u golang.org/x/golint
+      - run: go get -u golang.org/x/lint/golint
       - run:
           name: Run gofmt, enforce formatting
           command: "! go fmt ./... 2>&1 | read"
