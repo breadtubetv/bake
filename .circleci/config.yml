@@ -1,7 +1,7 @@
 environment: &environment
   environment:
     - PROJECT_NAME: bake
-    - GO111MODULE: on
+    - GO111MODULE: "on"
 
 defaults: &defaults
   working_directory: /tmp/build
