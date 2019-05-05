@@ -1,0 +1,65 @@
+environment: &environment
+  environment:
+    - PROJECT_NAME: bake
+    - GO111MODULE: "on"
+
+defaults: &defaults
+  working_directory: /tmp/build
+  docker:
+    - image: golang:1.12.4
+  <<: *environment
+
+version: 2.1
+jobs:
+  lint:
+    <<: *defaults
+    steps:
+      - checkout
+      - run: go get -u golang.org/x/lint/golint
+      - run:
+          name: Run gofmt, enforce formatting
+          command: "! go fmt ./... 2>&1 | read"
+      - run:
+          name: Run golint, enforce styles
+          command: "golint -set_exit_status ./..."
+
+  test:
+    <<: *defaults
+    environment:
+      TEST_RESULTS: /tmp/test-results
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - go-mod-v4-{{ checksum "go.sum" }}-test
+      - run: mkdir -p $TEST_RESULTS
+      - run: "go get -u gotest.tools/gotestsum"
+      - run: "gotestsum --junitfile $TEST_RESULTS/unit-tests.xml"
+      - save_cache:
+          key: go-mod-v4-{{ checksum "go.sum" }}-test
+          paths:
+            - "/go/pkg/mod"
+      - store_test_results:
+          path: /tmp/test-results
+
+  build:
+    <<: *defaults
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - go-mod-v4-{{ checksum "go.sum" }}
+      - run: "GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build ."
+      - save_cache:
+          key: go-mod-v4-{{ checksum "go.sum" }}
+          paths:
+            - "/go/pkg/mod"
+
+workflows:
+  lint_and_build:
+    jobs:
+      - lint
+      # - test
+      - build
+          # requires:
+          #   - test
