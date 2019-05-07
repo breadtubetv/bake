@@ -9,6 +9,7 @@ import (
 	"strings"
 )
 
+// CreateChannelVideoFolder creates an empty folder within the videos data folder
 func CreateChannelVideoFolder(channel *Channel, projectRoot string) error {
 	folder := path.Join(projectRoot, fmt.Sprintf("/data/videos/%s", channel.Slug))
 
@@ -40,4 +41,11 @@ func GetCreatorVideos(slug string, projectRoot string) ([]string, error) {
 	}
 
 	return videoIds, nil
+}
+
+// ImportVideo will import a YouTube video based on an ID and create
+// a new file in the videos data folder for the specified creator
+func ImportVideo(id, creator string) error {
+
+	return nil
 }
