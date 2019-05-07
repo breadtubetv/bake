@@ -3,6 +3,7 @@ package util
 import (
 	"fmt"
 	"io/ioutil"
+	"log"
 	"os"
 	"path"
 	"path/filepath"
@@ -45,7 +46,22 @@ func GetCreatorVideos(slug string, projectRoot string) ([]string, error) {
 
 // ImportVideo will import a YouTube video based on an ID and create
 // a new file in the videos data folder for the specified creator
-func ImportVideo(id, creator string) error {
+func ImportVideo(id, creator, projectRoot string) error {
+	channel, ok := LoadChannels(projectRoot).Find(creator)
+	if !ok {
+		log.Fatalf("creator %v not found", creator)
+	}
+
+	// TODO: Get video description via YouTube API
+	// TODO: Add file to data/videos/<creator> dir
+	// TODO: Add ID to channel page under 'videos'
+	channelDir := fmt.Sprintf("%s/data/videos/%s", projectRoot, creator)
+	if _, err := os.Stat(channelDir); os.IsNotExist(err) {
+		err := CreateChannelVideoFolder(channel, projectRoot)
+		if err != nil {
+			log.Fatalf("unable to create folder for %v: %v", creator, err)
+		}
+	}
 
 	return nil
 }
