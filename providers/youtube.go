@@ -36,10 +36,12 @@ const accessJSON = `{
   }
 }`
 
+// LoadYoutube initalises the Youtube service
 func LoadYoutube() map[string]interface{} {
 	return map[string]interface{}{
 		"config":         config,
 		"channel_import": importChannel,
+		"video_import":   GetVideo,
 	}
 }
 
@@ -123,14 +125,17 @@ func fetchProfileImageURL(url *util.URL) (string, error) {
 }
 
 func saveImage(imgURL string, slug string, projectRoot string) error {
-	resp, _ := http.Get(imgURL)
+	resp, err := http.Get(imgURL)
+	if err != nil {
+		return fmt.Errorf("couldn't retreive image: %v", err)
+	}
 	defer resp.Body.Close()
 
 	filePath := fmt.Sprintf("%s/static/img/channels/%s.jpg", projectRoot, slug)
 	img, _ := os.Create(filePath)
 	defer img.Close()
 
-	_, err := io.Copy(img, resp.Body)
+	_, err = io.Copy(img, resp.Body)
 	if err != nil {
 		return fmt.Errorf("Error saving channel profile picture, please download manually.\nErr: %v", err.Error())
 	}
@@ -191,6 +196,36 @@ func importChannel(slug string, channelURL *util.URL, projectRoot string) {
 	if err != nil {
 		log.Printf("Unable to create channel page for %s, please create manually.", slug)
 	}
+}
+
+// Video represents the a YouTube video
+type Video struct {
+	ID          string `yaml:"Id"`
+	Title       string
+	Description string
+}
+
+// GetVideo retreives video details from YouTube
+func GetVideo(videoID string) (*Video, error) {
+	client := getClient(youtube.YoutubeReadonlyScope)
+	yt, err := youtube.New(client)
+	if err != nil {
+		return nil, fmt.Errorf("error creating YouTube client: %v", err)
+	}
+
+	call := yt.Videos.List("snippet").Id(videoID)
+	resp, err := call.Do()
+	if err != nil {
+		return nil, fmt.Errorf("error calling the YouTube API: %v", err)
+	}
+
+	video := &Video{
+		ID:          resp.Items[0].Id,
+		Title:       resp.Items[0].Snippet.Title,
+		Description: resp.Items[0].Snippet.Description,
+	}
+
+	return video, nil
 }
 
 const launchWebServer = true

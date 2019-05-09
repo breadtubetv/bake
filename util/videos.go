@@ -55,8 +55,8 @@ func ImportVideo(id, creator, projectRoot string) error {
 	// TODO: Get video description via YouTube API
 	// TODO: Add file to data/videos/<creator> dir
 	// TODO: Add ID to channel page under 'videos'
-	channelDir := fmt.Sprintf("%s/data/videos/%s", projectRoot, creator)
-	if _, err := os.Stat(channelDir); os.IsNotExist(err) {
+	creatorDir := fmt.Sprintf("%s/data/videos/%s", projectRoot, creator)
+	if _, err := os.Stat(creatorDir); os.IsNotExist(err) {
 		err := CreateChannelVideoFolder(channel, projectRoot)
 		if err != nil {
 			log.Fatalf("unable to create folder for %v: %v", creator, err)

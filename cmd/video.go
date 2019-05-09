@@ -14,7 +14,7 @@ var videoCmd = &cobra.Command{
 	Short: "Import a video by ID",
 	Long:  `Import a YouTube video by ID and assign it to a creator.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		err := util.ImportVideo(id, creator, viper.Get("projectRoot"))
+		err := util.ImportVideo(id, creator, viper.GetString("projectRoot"))
 		if err != nil {
 			log.Fatalf("could not import video: %v", err)
 		}
