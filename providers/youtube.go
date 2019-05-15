@@ -20,6 +20,7 @@ import (
 	"golang.org/x/net/context"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
+	"gopkg.in/yaml.v2"
 
 	"google.golang.org/api/youtube/v3"
 )
@@ -41,7 +42,7 @@ func LoadYoutube() map[string]interface{} {
 	return map[string]interface{}{
 		"config":         config,
 		"channel_import": importChannel,
-		"video_import":   GetVideo,
+		"video_import":   ImportVideo,
 	}
 }
 
@@ -190,7 +191,7 @@ func importChannel(slug string, channelURL *util.URL, projectRoot string) {
 		log.Fatalf("Error saving channel '%s': %v", slug, err)
 	}
 
-	util.CreateChannelVideoFolder(channel, projectRoot)
+	util.CreateChannelVideoFolder(channel, projectRoot, true)
 
 	err = util.CreateChannelPage(channel, projectRoot)
 	if err != nil {
@@ -198,15 +199,62 @@ func importChannel(slug string, channelURL *util.URL, projectRoot string) {
 	}
 }
 
+// ImportVideo will import a YouTube video based on an ID and create
+// a new file in the videos data folder for the specified creator
+func ImportVideo(id, creator, projectRoot string) error {
+	channel, ok := util.LoadChannels(projectRoot + "/data/channels").Find(creator)
+	if !ok {
+		log.Fatalf("creator %v not found", creator)
+	}
+
+	creatorDir := fmt.Sprintf("%s/data/videos/%s", projectRoot, creator)
+	if _, err := os.Stat(creatorDir); os.IsNotExist(err) {
+		err := util.CreateChannelVideoFolder(channel, projectRoot, false)
+		if err != nil {
+			log.Fatalf("unable to create folder for %v: %v", creator, err)
+		}
+	}
+
+	vid, err := getVideo(id)
+	vid.Channel = creator
+	if err != nil {
+		return err
+	}
+
+	videoFile := fmt.Sprintf("%s/%s.yml", creatorDir, vid.ID)
+	f, err := os.Create(videoFile)
+	if err != nil {
+		return fmt.Errorf("could not create file for video '%s': %v", id, err)
+	}
+	defer f.Close()
+
+	data, err := yaml.Marshal(vid)
+	if err != nil {
+		return fmt.Errorf("couldn't marshal video data: %v", err)
+	}
+	f.Write(data)
+	f.Sync()
+	log.Printf("created video file %v", videoFile)
+
+	err = channel.GetChannelPage(projectRoot).AddVideo(id, projectRoot)
+	if err != nil {
+		return fmt.Errorf("couldn't update channel page: %v", err)
+	}
+
+	return nil
+}
+
 // Video represents the a YouTube video
 type Video struct {
 	ID          string `yaml:"Id"`
 	Title       string
 	Description string
+	Source      string
+	Channel     string
 }
 
 // GetVideo retreives video details from YouTube
-func GetVideo(videoID string) (*Video, error) {
+func getVideo(videoID string) (*Video, error) {
 	client := getClient(youtube.YoutubeReadonlyScope)
 	yt, err := youtube.New(client)
 	if err != nil {
@@ -223,6 +271,7 @@ func GetVideo(videoID string) (*Video, error) {
 		ID:          resp.Items[0].Id,
 		Title:       resp.Items[0].Snippet.Title,
 		Description: resp.Items[0].Snippet.Description,
+		Source:      "youtube",
 	}
 
 	return video, nil
