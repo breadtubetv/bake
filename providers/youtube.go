@@ -246,7 +246,7 @@ func ImportVideo(id, creator, projectRoot string) error {
 
 // Video represents the a YouTube video
 type Video struct {
-	ID          string `yaml:"Id"`
+	ID          string `yaml:"id"`
 	Title       string
 	Description string
 	Source      string
