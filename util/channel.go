@@ -317,6 +317,29 @@ type ChannelPage struct {
 	Videos []string `yaml:",omitempty"`
 }
 
+// GetChannelPage returns the ChannelPage for the specifid channel
+func (c *Channel) GetChannelPage(projectRoot string) *ChannelPage {
+	file := fmt.Sprintf("%s/content/%s.md", projectRoot, c.Slug)
+	data, err := ioutil.ReadFile(file)
+	if err != nil {
+		log.Print("couldn't open channel page")
+		return nil
+	}
+
+	d := strings.TrimPrefix(string(data), "---")
+	d = strings.TrimSuffix(d, "---")
+	data = []byte(d)
+
+	var page *ChannelPage
+	err = yaml.Unmarshal(data, &page)
+	if err != nil {
+		log.Print("couldn't unmarshal into channel page type")
+		return nil
+	}
+
+	return page
+}
+
 // CreateChannelPage takes the permalink for the channel
 // and creates a .md file in the content directory.
 func CreateChannelPage(channel *Channel, projectRoot string) error {
@@ -358,6 +381,34 @@ func CreateChannelPage(channel *Channel, projectRoot string) error {
 	err = ioutil.WriteFile(path.Join(projectRoot, fmt.Sprintf("/content/%s.md", channel.Slug)), pageBytes, os.ModePerm)
 	if err != nil {
 		return fmt.Errorf("Failed to marshal yaml for %s channel page", channel.Slug)
+	}
+
+	return nil
+}
+
+// AddVideo adds a video to the channel page and saves it
+func (cp *ChannelPage) AddVideo(id, projectRoot string) error {
+	cp.Videos = append(cp.Videos, id)
+	err := cp.save(projectRoot)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (cp *ChannelPage) save(projectRoot string) error {
+	fileName := fmt.Sprintf("%s.md", cp.Channel)
+	dataDir := path.Join(projectRoot, "/content/")
+	pageBytes, err := yaml.Marshal(cp)
+	if err != nil {
+		return fmt.Errorf("Failed to marshal yaml for %s channel page. \nError: %s", cp.Channel, err.Error())
+	}
+
+	pageBytes = []byte(strings.Join([]string{"---\n", string(pageBytes), "---"}, ""))
+	log.Printf("Saving %s/%s", dataDir, fileName)
+	err = ioutil.WriteFile(path.Join(projectRoot, fmt.Sprintf("/content/%s.md", cp.Channel)), pageBytes, os.ModePerm)
+	if err != nil {
+		return fmt.Errorf("Failed to marshal yaml for %s channel page", cp.Channel)
 	}
 
 	return nil
