@@ -20,6 +20,7 @@ import (
 	"golang.org/x/net/context"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
+	"gopkg.in/yaml.v2"
 
 	"google.golang.org/api/youtube/v3"
 )
@@ -36,10 +37,12 @@ const accessJSON = `{
   }
 }`
 
+// LoadYoutube initalises the Youtube service
 func LoadYoutube() map[string]interface{} {
 	return map[string]interface{}{
 		"config":         config,
 		"channel_import": importChannel,
+		"video_import":   ImportVideo,
 	}
 }
 
@@ -123,14 +126,17 @@ func fetchProfileImageURL(url *util.URL) (string, error) {
 }
 
 func saveImage(imgURL string, slug string, projectRoot string) error {
-	resp, _ := http.Get(imgURL)
+	resp, err := http.Get(imgURL)
+	if err != nil {
+		return fmt.Errorf("couldn't retreive image: %v", err)
+	}
 	defer resp.Body.Close()
 
 	filePath := fmt.Sprintf("%s/static/img/channels/%s.jpg", projectRoot, slug)
 	img, _ := os.Create(filePath)
 	defer img.Close()
 
-	_, err := io.Copy(img, resp.Body)
+	_, err = io.Copy(img, resp.Body)
 	if err != nil {
 		return fmt.Errorf("Error saving channel profile picture, please download manually.\nErr: %v", err.Error())
 	}
@@ -191,6 +197,84 @@ func importChannel(slug string, channelURL *util.URL, projectRoot string) {
 	if err != nil {
 		log.Printf("Unable to create channel page for %s, please create manually.", slug)
 	}
+}
+
+// ImportVideo will import a YouTube video based on an ID and create
+// a new file in the videos data folder for the specified creator
+func ImportVideo(id, creator, projectRoot string) error {
+	channel, ok := util.LoadChannels(projectRoot + "/data/channels").Find(creator)
+	if !ok {
+		log.Fatalf("creator %v not found", creator)
+	}
+
+	creatorDir := fmt.Sprintf("%s/data/videos/%s", projectRoot, creator)
+	if _, err := os.Stat(creatorDir); os.IsNotExist(err) {
+		err := util.CreateChannelVideoFolder(channel, projectRoot)
+		if err != nil {
+			log.Fatalf("unable to create folder for %v: %v", creator, err)
+		}
+	}
+
+	vid, err := getVideo(id)
+	vid.Channel = creator
+	if err != nil {
+		return err
+	}
+
+	videoFile := fmt.Sprintf("%s/%s.yml", creatorDir, vid.ID)
+	f, err := os.Create(videoFile)
+	if err != nil {
+		return fmt.Errorf("could not create file for video '%s': %v", id, err)
+	}
+	defer f.Close()
+
+	data, err := yaml.Marshal(vid)
+	if err != nil {
+		return fmt.Errorf("couldn't marshal video data: %v", err)
+	}
+	f.Write(data)
+	f.Sync()
+	log.Printf("created video file %v", videoFile)
+
+	err = channel.GetChannelPage(projectRoot).AddVideo(id, projectRoot)
+	if err != nil {
+		return fmt.Errorf("couldn't update channel page: %v", err)
+	}
+
+	return nil
+}
+
+// Video represents the a YouTube video
+type Video struct {
+	ID          string `yaml:"id"`
+	Title       string
+	Description string
+	Source      string
+	Channel     string
+}
+
+// GetVideo retreives video details from YouTube
+func getVideo(videoID string) (*Video, error) {
+	client := getClient(youtube.YoutubeReadonlyScope)
+	yt, err := youtube.New(client)
+	if err != nil {
+		return nil, fmt.Errorf("error creating YouTube client: %v", err)
+	}
+
+	call := yt.Videos.List("snippet").Id(videoID)
+	resp, err := call.Do()
+	if err != nil {
+		return nil, fmt.Errorf("error calling the YouTube API: %v", err)
+	}
+
+	video := &Video{
+		ID:          resp.Items[0].Id,
+		Title:       resp.Items[0].Snippet.Title,
+		Description: resp.Items[0].Snippet.Description,
+		Source:      "youtube",
+	}
+
+	return video, nil
 }
 
 const launchWebServer = true

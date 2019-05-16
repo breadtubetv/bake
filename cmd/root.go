@@ -19,7 +19,7 @@ var Providers = map[string]map[string]interface{}{
 	"youtube": providers.LoadYoutube(),
 }
 
-// ProviderNames is a func
+// ProviderNames gets all available providers
 func ProviderNames() []string {
 	keys := make([]string, 0, len(Providers))
 	for k := range Providers {
