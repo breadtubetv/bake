@@ -191,7 +191,7 @@ func importChannel(slug string, channelURL *util.URL, projectRoot string) {
 		log.Fatalf("Error saving channel '%s': %v", slug, err)
 	}
 
-	util.CreateChannelVideoFolder(channel, projectRoot, true)
+	util.CreateChannelVideoFolder(channel, projectRoot)
 
 	err = util.CreateChannelPage(channel, projectRoot)
 	if err != nil {
@@ -209,7 +209,7 @@ func ImportVideo(id, creator, projectRoot string) error {
 
 	creatorDir := fmt.Sprintf("%s/data/videos/%s", projectRoot, creator)
 	if _, err := os.Stat(creatorDir); os.IsNotExist(err) {
-		err := util.CreateChannelVideoFolder(channel, projectRoot, false)
+		err := util.CreateChannelVideoFolder(channel, projectRoot)
 		if err != nil {
 			log.Fatalf("unable to create folder for %v: %v", creator, err)
 		}
