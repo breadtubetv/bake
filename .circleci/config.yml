@@ -61,7 +61,7 @@ jobs:
 workflows:
   lint_and_build:
     jobs:
-      # - lint
+      - lint
       - test
       - build:
           requires:
