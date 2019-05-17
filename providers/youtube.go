@@ -191,7 +191,7 @@ func importChannel(slug string, channelURL *util.URL, projectRoot string) {
 		log.Fatalf("Error saving channel '%s': %v", slug, err)
 	}
 
-	util.CreateChannelVideoFolder(channel, projectRoot)
+	_ = util.CreateChannelVideoFolder(channel, projectRoot)
 
 	err = util.CreateChannelPage(channel, projectRoot)
 	if err != nil {
@@ -232,8 +232,15 @@ func ImportVideo(id, creator, projectRoot string) error {
 	if err != nil {
 		return fmt.Errorf("couldn't marshal video data: %v", err)
 	}
-	f.Write(data)
-	f.Sync()
+	_, err = f.Write(data)
+	if err != nil {
+		return fmt.Errorf("couldn't write to file: %s: %v", f.Name(), err)
+	}
+
+	err = f.Sync()
+	if err != nil {
+		return fmt.Errorf("couldn't sync file: %s: %v", f.Name(), err)
+	}
 	log.Printf("created video file %v", videoFile)
 
 	err = channel.GetChannelPage(projectRoot).AddVideo(id, projectRoot)
@@ -288,17 +295,6 @@ func handleError(err error, message string) {
 	}
 }
 
-const missingClientSecretsMessage = `
-Please configure OAuth 2.0
-To make this sample run, you need to populate the client_secrets.json file
-found at:
-   %v
-with information from the {{ Google Cloud Console }}
-{{ https://cloud.google.com/console }}
-For more information about the client_secrets.json file format, please visit:
-https://developers.google.com/api-client-library/python/guide/aaa_client_secrets
-`
-
 // getClient uses a Context and Config to retrieve a Token
 // then generate a Client. It returns the generated Client.
 func getClient(scope string) *http.Client {
@@ -349,13 +345,20 @@ func startWebServer() (codeCh chan string, err error) {
 	}
 	codeCh = make(chan string)
 
-	go http.Serve(listener, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		code := r.FormValue("code")
-		codeCh <- code // send code to OAuth flow
-		listener.Close()
-		w.Header().Set("Content-Type", "text/plain")
-		fmt.Fprintf(w, "Received code: %v\r\nYou can now safely close this browser window.", code)
-	}))
+	serve := func() {
+		err := http.Serve(listener, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			code := r.FormValue("code")
+			codeCh <- code // send code to OAuth flow
+			listener.Close()
+			w.Header().Set("Content-Type", "text/plain")
+			fmt.Fprintf(w, "Received code: %v\r\nYou can now safely close this browser window.", code)
+		}))
+		if err != nil {
+			panic(fmt.Sprintf("error starting server for OAuth callback: %v", err))
+		}
+	}
+
+	go serve()
 
 	return codeCh, nil
 }
@@ -380,7 +383,7 @@ func openURL(url string) error {
 
 // Exchange the authorization code for an access token
 func exchangeToken(config *oauth2.Config, code string) (*oauth2.Token, error) {
-	tok, err := config.Exchange(oauth2.NoContext, code)
+	tok, err := config.Exchange(context.TODO(), code)
 	if err != nil {
 		log.Fatalf("Unable to retrieve token %v", err)
 	}
@@ -433,7 +436,11 @@ func tokenCacheFile() (string, error) {
 		return "", err
 	}
 	tokenCacheDir := filepath.Join(usr.HomeDir, ".credentials")
-	os.MkdirAll(tokenCacheDir, 0700)
+	err = os.MkdirAll(tokenCacheDir, 0700)
+	if err != nil {
+		return "", err
+	}
+
 	return filepath.Join(tokenCacheDir,
 		url.QueryEscape("youtube-go.json")), err
 }
@@ -461,5 +468,8 @@ func saveToken(file string, token *oauth2.Token) {
 		log.Fatalf("Unable to cache oauth token: %v", err)
 	}
 	defer f.Close()
-	json.NewEncoder(f).Encode(token)
+	err = json.NewEncoder(f).Encode(token)
+	if err != nil {
+		log.Printf("couldn't store token: %v", err)
+	}
 }

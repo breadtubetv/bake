@@ -1,30 +1,30 @@
 environment: &environment
   environment:
-    - PROJECT_NAME: bake
-    - GO111MODULE: "on"
+    PROJECT_NAME: bake
+    GO111MODULE: "on"
 
-defaults: &defaults
+build_defaults: &build_defaults
   working_directory: /tmp/build
   docker:
-    - image: golang:1.12.4
+    - image: golang:1.12.5
+  <<: *environment
+
+lint_defaults: &lint_defaults
+  working_directory: /tmp/build
+  docker:
+    - image: golangci/golangci-lint:v1.16
   <<: *environment
 
 version: 2.1
 jobs:
   lint:
-    <<: *defaults
+    <<: *lint_defaults
     steps:
       - checkout
-      - run: go get -u golang.org/x/lint/golint
-      - run:
-          name: Run gofmt, enforce formatting
-          command: "! go fmt ./... 2>&1 | read"
-      - run:
-          name: Run golint, enforce styles
-          command: "golint -set_exit_status ./..."
+      - run: golangci-lint --config=$CIRCLE_WORKING_DIRECTORY/.golangci.yml
 
   test:
-    <<: *defaults
+    <<: *build_defaults
     environment:
       TEST_RESULTS: /tmp/test-results
     steps:
@@ -35,6 +35,7 @@ jobs:
       - run: mkdir -p $TEST_RESULTS
       - run: "go get -u gotest.tools/gotestsum"
       - run: "gotestsum --junitfile $TEST_RESULTS/unit-tests.xml"
+      - run: "go mod tidy"
       - save_cache:
           key: go-mod-v4-{{ checksum "go.sum" }}-test
           paths:
@@ -43,7 +44,9 @@ jobs:
           path: /tmp/test-results
 
   build:
-    <<: *defaults
+    <<: *build_defaults
+    environment:
+      GO111MODULE: "on"
     steps:
       - checkout
       - restore_cache:

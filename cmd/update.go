@@ -50,6 +50,9 @@ func updateChannelList(args []string) {
 		}
 
 		youtube, err := providers.FetchDetails(url)
+		if err != nil {
+			log.Fatalf("failed to update channel %s: %v", channel.Slug, err)
+		}
 
 		channel.Providers["youtube"] = youtube
 
@@ -72,6 +75,9 @@ func updateChannels() {
 		}
 
 		youtube, err := providers.FetchDetails(url)
+		if err != nil {
+			log.Fatalf("failed to update channel %s: %v", channel.Slug, err)
+		}
 
 		channel.Providers["youtube"] = youtube
 
