@@ -22,6 +22,7 @@ import (
 	"golang.org/x/oauth2/google"
 	"gopkg.in/yaml.v2"
 
+	"google.golang.org/api/googleapi/transport"
 	"google.golang.org/api/youtube/v3"
 )
 
@@ -302,6 +303,12 @@ https://developers.google.com/api-client-library/python/guide/aaa_client_secrets
 // getClient uses a Context and Config to retrieve a Token
 // then generate a Client. It returns the generated Client.
 func getClient(scope string) *http.Client {
+	if apiKey := os.Getenv("YOUTUBE_API"); apiKey != "" {
+		return &http.Client{
+			Transport: &transport.APIKey{Key: apiKey},
+		}
+	}
+
 	ctx := context.Background()
 
 	b := []byte(accessJSON)
