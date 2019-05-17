@@ -43,26 +43,23 @@ jobs:
       - store_test_results:
           path: /tmp/test-results
 
-  build:
-    <<: *build_defaults
-    environment:
-      GO111MODULE: "on"
+  release:
+    docker:
+      - image: circleci/golang:1.12
     steps:
       - checkout
-      - restore_cache:
-          keys:
-            - go-mod-v4-{{ checksum "go.sum" }}
-      - run: "GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build ."
-      - save_cache:
-          key: go-mod-v4-{{ checksum "go.sum" }}
-          paths:
-            - "/go/pkg/mod"
+      - run: curl -sL https://git.io/goreleaser | bash
 
 workflows:
   lint_and_build:
     jobs:
       - lint
       - test
-      - build:
-          requires:
-            - test
+  release:
+    jobs:
+      - release:
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /v[0-9]+(\.[0-9]+)*(-.*)*/
