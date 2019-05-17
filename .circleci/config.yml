@@ -21,7 +21,7 @@ jobs:
     <<: *lint_defaults
     steps:
       - checkout
-      - run: golangci-lint --config=$CIRCLE_WORKING_DIRECTORY/.golangci.yml
+      - run: golangci-lint run --config=$CIRCLE_WORKING_DIRECTORY/.golangci.yml
 
   test:
     <<: *build_defaults
