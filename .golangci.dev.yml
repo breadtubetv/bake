@@ -1,0 +1,30 @@
+run:
+  # default concurrency is a available CPU number
+  concurrency: 8
+  # timeout for analysis, e.g. 30s, 5m, default is 1m
+  deadline: 1m
+  # exit code when at least one issue was found, default is 1
+  issues-exit-code: 1
+  # include test files or not, default is true
+  tests: true
+  skip-dirs:
+    - .circleci
+    - .github
+
+linters:
+  fast: true
+
+# all available settings of specific linters
+linters-settings:
+  errcheck:
+    # path to a file containing a list of functions to exclude from checking
+    # see https://github.com/kisielk/errcheck#excluding-functions for details
+    exclude: .errcheck-exclude
+
+issues:
+  # Excluding configuration per-path, per-linter, per-text and per-source
+  exclude-rules:
+    # Exclude some linters from running on tests files.
+    - path: _test\.go
+      linters:
+        - errcheck
