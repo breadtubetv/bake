@@ -80,21 +80,18 @@ func (c *Channel) UnmarshalYAML(unmarshal func(interface{}) error) error {
 				return fmt.Errorf("error parsing name: '%s', %T is not a string", value, value)
 			}
 			channel.Name = name
-			break
 		case "slug":
 			slug, ok := value.(string)
 			if !ok {
 				return fmt.Errorf("error parsing slug: '%s', %T is not a string", value, value)
 			}
 			channel.Slug = slug
-			break
 		case "permalink":
 			permalink, ok := value.(string)
 			if !ok {
 				return fmt.Errorf("error parsing permalink: '%s', %T is not a string", value, value)
 			}
 			channel.Permalink = permalink
-			break
 		case "tags":
 			// Handle non array tags
 			if tags, ok := value.(string); ok {
@@ -107,7 +104,6 @@ func (c *Channel) UnmarshalYAML(unmarshal func(interface{}) error) error {
 				return fmt.Errorf("error parsing tags: '%s', %T is not a string", value, value)
 			}
 			channel.Tags = tags
-			break
 		case "providers":
 			providers, ok := value.(map[interface{}]interface{})
 			if !ok {
@@ -116,10 +112,8 @@ func (c *Channel) UnmarshalYAML(unmarshal func(interface{}) error) error {
 			if err := unmarshalProviders(providers, channel.Providers); err != nil {
 				return err
 			}
-			break
 		default:
 			channel.remnant[key] = value
-			break
 		}
 	}
 
@@ -213,10 +207,6 @@ func unmarshalProvider(values map[interface{}]interface{}, out *Provider) error 
 			provider.Description = description
 			break
 		case "subscribers":
-			if value == nil {
-				continue
-			}
-
 			subscribers, ok := value.(int)
 			if !ok {
 				return fmt.Errorf("error parsing subscribers: '%s', %T is not an int", value, value)

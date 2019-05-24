@@ -3,8 +3,7 @@ package providers
 // Provider is a struct that serves as a base type for
 // future providers.
 type Provider struct {
-	providerName string
-	name         string
+	name string
 }
 
 type Providers struct{}

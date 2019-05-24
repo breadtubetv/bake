@@ -23,10 +23,12 @@ var config *viper.Viper
 // AddConfig allows package user to pass a viper configuation to the pkg
 func AddConfig(conf *viper.Viper) error {
 	config = conf
+	return nil
 }
 
 // FindCreatorBySlug retreives the creator based on the provided
 // slug, loads the creator, and returns its creator object.
 func FindCreatorBySlug(slug string) *Creator {
 	fmt.Print(slug)
+	return &Creator{}
 }

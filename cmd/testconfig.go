@@ -34,8 +34,7 @@ This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("testconfig called")
-		var creator creators.Creator
-		creator.AddConfig(viper.GetViper())
+		creators.AddConfig(viper.GetViper())
 	},
 }
 

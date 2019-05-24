@@ -1,0 +1,19 @@
+repos:
+-   name: Local Validations
+    repo: local
+    hooks:
+    - id: golangci-lint
+      name: golangci-lint
+      description: Fast linters runner for Go.
+      entry: golangci-lint run --fix
+      types: [go]
+      language: golang
+      pass_filenames: false
+
+    - id: gomodtidy
+      name: gomodtidy
+      description: Tidy modules.
+      entry: GO111MODULE=on go mod tidy
+      types: [go]
+      language: golang
+      pass_filenames: false
