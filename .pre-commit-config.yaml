@@ -9,11 +9,10 @@ repos:
       types: [go]
       language: golang
       pass_filenames: false
-
     - id: gomodtidy
       name: gomodtidy
       description: Tidy modules.
-      entry: GO111MODULE=on go mod tidy
+      entry: env GO111MODULE=on go mod tidy
       types: [go]
       language: golang
       pass_filenames: false
