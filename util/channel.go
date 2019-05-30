@@ -296,20 +296,23 @@ func SaveChannel(channel *Channel, dataDir string) error {
 // ChannelPage represents all the fields required
 // to create a channel specific page.
 type ChannelPage struct {
+	Aliases    []string `yaml:",omitempty"`
 	Title      string
 	TypeString string `yaml:"type"` // type is reserved
 	Channel    string
+	Tags       []string
+	Url        string
+	Videos     []string `yaml:",omitempty"`
 	Menu       struct {
 		Main struct {
 			Parent string
 		}
 	}
-	Videos []string `yaml:",omitempty"`
 }
 
 // GetChannelPage returns the ChannelPage for the specifid channel
 func (c *Channel) GetChannelPage(projectRoot string) *ChannelPage {
-	file := fmt.Sprintf("%s/content/%s.md", projectRoot, c.Slug)
+	file := fmt.Sprintf("%s/content/channel/%s.md", projectRoot, c.Slug)
 	data, err := ioutil.ReadFile(file)
 	if err != nil {
 		log.Print("couldn't open channel page")
@@ -334,7 +337,7 @@ func (c *Channel) GetChannelPage(projectRoot string) *ChannelPage {
 // and creates a .md file in the content directory.
 func CreateChannelPage(channel *Channel, projectRoot string) error {
 	fileName := fmt.Sprintf("%s.md", channel.Slug)
-	dataDir := path.Join(projectRoot, "/content/")
+	dataDir := path.Join(projectRoot, "/content/channel/")
 	if _, err := ioutil.ReadFile(fmt.Sprintf("%s%s", dataDir, fileName)); err == nil {
 		return fmt.Errorf(fmt.Sprintf("Channel Page %s.md already exists.", channel.Slug))
 	}
@@ -354,6 +357,7 @@ func CreateChannelPage(channel *Channel, projectRoot string) error {
 				Parent: "Channels",
 			},
 		},
+		Url: fmt.Sprintf("\"%s\"", channel.Slug),
 	}
 
 	videos, _ := GetCreatorVideos(channel.Slug, projectRoot)
@@ -388,7 +392,7 @@ func (cp *ChannelPage) AddVideo(id, projectRoot string) error {
 
 func (cp *ChannelPage) save(projectRoot string) error {
 	fileName := fmt.Sprintf("%s.md", cp.Channel)
-	dataDir := path.Join(projectRoot, "/content/")
+	dataDir := path.Join(projectRoot, "/content/channel/")
 	pageBytes, err := yaml.Marshal(cp)
 	if err != nil {
 		return fmt.Errorf("Failed to marshal yaml for %s channel page. \nError: %s", cp.Channel, err.Error())
@@ -396,7 +400,7 @@ func (cp *ChannelPage) save(projectRoot string) error {
 
 	pageBytes = []byte(strings.Join([]string{"---\n", string(pageBytes), "---"}, ""))
 	log.Printf("Saving %s/%s", dataDir, fileName)
-	err = ioutil.WriteFile(path.Join(projectRoot, fmt.Sprintf("/content/%s.md", cp.Channel)), pageBytes, os.ModePerm)
+	err = ioutil.WriteFile(path.Join(projectRoot, fmt.Sprintf("/content/channel/%s.md", cp.Channel)), pageBytes, os.ModePerm)
 	if err != nil {
 		return fmt.Errorf("Failed to marshal yaml for %s channel page", cp.Channel)
 	}
