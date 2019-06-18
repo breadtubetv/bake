@@ -382,7 +382,7 @@ func CreateChannelPage(channel *Channel, projectRoot string) error {
 
 // AddVideo adds a video to the channel page and saves it
 func (cp *ChannelPage) AddVideo(id, projectRoot string) error {
-	cp.Videos = append([]string{id}, cp.Videos...)
+	cp.Videos = append(cp.Videos, id)
 	err := cp.save(projectRoot)
 	if err != nil {
 		return err
