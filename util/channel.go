@@ -372,7 +372,7 @@ func CreateChannelPage(channel *Channel, projectRoot string) error {
 
 	pageBytes = []byte(strings.Join([]string{"---\n", string(pageBytes), "---"}, ""))
 	log.Printf("Saving %s/%s", dataDir, fileName)
-	err = ioutil.WriteFile(path.Join(projectRoot, fmt.Sprintf("/content/%s.md", channel.Slug)), pageBytes, os.ModePerm)
+	err = ioutil.WriteFile(path.Join(projectRoot, fmt.Sprintf("/content/channel/%s.md", channel.Slug)), pageBytes, os.ModePerm)
 	if err != nil {
 		return fmt.Errorf("Failed to marshal yaml for %s channel page", channel.Slug)
 	}
