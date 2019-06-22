@@ -22,8 +22,6 @@ output:
 
 linters:
   fast: true
-  enable:
-    - goimports
 
 # all available settings of specific linters
 linters-settings:

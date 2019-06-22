@@ -380,9 +380,12 @@ func CreateChannelPage(channel *Channel, projectRoot string) error {
 	return nil
 }
 
-// AddVideo adds a video to the channel page and saves it
-func (cp *ChannelPage) AddVideo(id, projectRoot string) error {
-	cp.Videos = append(cp.Videos, id)
+// AddVideo adds a new video to the channel page and saves it
+func (cp *ChannelPage) AddVideo(id string, projectRoot string) error {
+	if !contains(cp.Videos, id) {
+		cp.Videos = append(cp.Videos, id)
+	}
+
 	err := cp.save(projectRoot)
 	if err != nil {
 		return err
@@ -406,4 +409,14 @@ func (cp *ChannelPage) save(projectRoot string) error {
 	}
 
 	return nil
+}
+
+// https://ispycode.com/GO/Collections/Arrays/Check-if-item-is-in-array
+func contains(arr []string, str string) bool {
+   for _, a := range arr {
+      if a == str {
+         return true
+      }
+   }
+   return false
 }
