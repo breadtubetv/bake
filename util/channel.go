@@ -133,6 +133,7 @@ type Provider struct {
 	URL         *URL
 	Description string
 	Subscribers uint64
+	Videos      []string `yaml:",omitempty"`
 }
 
 // yaml package does not have very composeable Unmarshalling, so we have to
