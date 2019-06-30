@@ -13,6 +13,8 @@ run:
 
 linters:
   fast: true
+  enable:
+    - golint
 
 # all available settings of specific linters
 linters-settings:

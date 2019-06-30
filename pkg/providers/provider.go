@@ -1,22 +1,29 @@
 package providers
 
-// Provider is a struct that serves as a base type for
-// future providers.
-type Provider struct {
-	name string
-}
+// TODO: Patreon, Social (generic social media accounts)
 
-type Providers struct{}
+import (
+	"github.com/pkg/errors"
+)
 
-// ProviderI specifies the minimum methods a provider needs
+type Providers []*Provider
+
+// Provider specifies the minimum methods a provider needs
 // to implement.
-type ProviderI interface {
-	Load() Provider
-	Add() (Provider, error)
-	Delete() error
+type Provider interface {
+	GetName() string
 }
 
-// Name returns the name of the provider.
-func (p *Provider) Name() string {
-	return p.name
+func (pr *Providers) Add(provider *Provider) {
+	*pr = append(*pr, provider)
+}
+
+func (pr *Providers) GetProvider(key string) (*Provider, error) {
+	for _, provider := range *pr {
+		if (*provider).GetName() == key {
+			return provider, nil
+		}
+	}
+
+	return nil, errors.Errorf("provider '%v' could not be found", key)
 }
