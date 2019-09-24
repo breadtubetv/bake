@@ -224,6 +224,11 @@ func importChannel(slug string, channelURL *util.URL, projectRoot string) {
 		log.Fatalf("Error saving channel '%s': %v", slug, err)
 	}
 
+	err = util.CreateChannelPage(channel, projectRoot)
+	if err != nil {
+		log.Printf("Unable to create channel page for %s, please create manually.", slug)
+	}
+
 	_ = util.CreateChannelVideoFolder(channel, projectRoot)
 
 	for _, videoId := range channel.Providers["youtube"].Videos {
@@ -233,11 +238,6 @@ func importChannel(slug string, channelURL *util.URL, projectRoot string) {
 		if err != nil {
 			log.Printf("Failed to import videos %s", videoId)
 		}
-	}
-
-	err = util.CreateChannelPage(channel, projectRoot)
-	if err != nil {
-		log.Printf("Unable to create channel page for %s, please create manually.", slug)
 	}
 }
 
