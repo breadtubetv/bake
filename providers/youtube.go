@@ -300,6 +300,7 @@ type Video struct {
 	Description string
 	Source      string
 	Channel     string
+	PublishDate string
 }
 
 // GetVideo retreives video details from YouTube
@@ -320,6 +321,7 @@ func getVideo(videoID string) (*Video, error) {
 		ID:          resp.Items[0].Id,
 		Title:       resp.Items[0].Snippet.Title,
 		Description: resp.Items[0].Snippet.Description,
+		PublishDate: resp.Items[0].Snippet.PublishedAt,
 		Source:      "youtube",
 	}
 
