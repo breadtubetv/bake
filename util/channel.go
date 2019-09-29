@@ -293,13 +293,3 @@ func SaveChannel(channel *Channel, dataDir string) error {
 
 	return ioutil.WriteFile(filePath, data, os.ModePerm)
 }
-
-// https://ispycode.com/GO/Collections/Arrays/Check-if-item-is-in-array
-func contains(arr []string, str string) bool {
-   for _, a := range arr {
-      if a == str {
-         return true
-      }
-   }
-   return false
-}
