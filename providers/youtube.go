@@ -201,7 +201,7 @@ func importChannel(slug string, channelURL *util.URL, projectRoot string) {
 
 	channel, ok := channelList.Find(slug)
 	if ok {
-		log.Fatalf("Channel with slug '%s' already exists, use update instead.", slug)
+		log.Printf("Channel with slug '%s' already exists, updating.", slug)
 	}
 	channel.Name = importedChannel.Name
 	channel.Slug = importedChannel.Slug
@@ -222,11 +222,6 @@ func importChannel(slug string, channelURL *util.URL, projectRoot string) {
 	err = util.SaveChannel(channel, dataDir)
 	if err != nil {
 		log.Fatalf("Error saving channel '%s': %v", slug, err)
-	}
-
-	err = util.CreateChannelPage(channel, projectRoot)
-	if err != nil {
-		log.Printf("Unable to create channel page for %s, please create manually.", slug)
 	}
 
 	_ = util.CreateChannelVideoFolder(channel, projectRoot)
@@ -284,11 +279,6 @@ func ImportVideo(id, creator, projectRoot string) error {
 		return fmt.Errorf("couldn't sync file: %s: %v", f.Name(), err)
 	}
 	log.Printf("created video file %v", videoFile)
-
-	err = channel.GetChannelPage(projectRoot).AddVideo(id, projectRoot)
-	if err != nil {
-		return fmt.Errorf("couldn't update channel page: %v", err)
-	}
 
 	return nil
 }
