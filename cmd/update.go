@@ -33,7 +33,8 @@ func init() {
 }
 
 func updateChannelList(args []string) {
-	dataDir := path.Join(os.ExpandEnv(viper.GetString("projectRoot")), "/data/channels")
+	projectRoot := os.ExpandEnv(viper.GetString("projectRoot"))
+	dataDir := path.Join(projectRoot, "/data/channels")
 	channels := util.LoadChannels(dataDir)
 
 	for _, channelSlug := range args {
@@ -56,6 +57,14 @@ func updateChannelList(args []string) {
 
 		channel.Providers["youtube"] = youtube
 
+		for _, videoId := range channel.Providers["youtube"].Videos {
+			err = providers.ImportVideo(videoId, channelSlug, projectRoot)
+
+			if err != nil {
+				log.Printf("Failed to import videos %s", videoId)
+			}
+		}
+
 		err = util.SaveChannel(channel, dataDir)
 		if err != nil {
 			log.Printf("Failed to update channel %s (%s), error: %v", channel.Name, channel.Slug, err)
@@ -64,7 +73,8 @@ func updateChannelList(args []string) {
 }
 
 func updateChannels() {
-	dataDir := path.Join(os.ExpandEnv(viper.GetString("projectRoot")), "/data/channels")
+	projectRoot := os.ExpandEnv(viper.GetString("projectRoot"))
+	dataDir := path.Join(projectRoot, "/data/channels")
 	channels := util.LoadChannels(dataDir)
 
 	for _, channel := range channels {

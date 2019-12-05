@@ -60,7 +60,7 @@ func config() {
 
 // FetchDetails returns the YouTube details for a channel
 func FetchDetails(channelURL *util.URL) (util.Provider, error) {
-	id := path.Base(channelURL.Path)
+	channelSlug := path.Base(channelURL.Path)
 	category := path.Base(path.Dir(channelURL.Path))
 
 	client := getClient(youtube.YoutubeReadonlyScope)
@@ -69,11 +69,11 @@ func FetchDetails(channelURL *util.URL) (util.Provider, error) {
 		return util.Provider{}, fmt.Errorf("error creating YouTube client: %v", err)
 	}
 
-	call := service.Channels.List("snippet,statistics")
+	call := service.Channels.List("snippet,statistics,contentDetails")
 	if category == "channel" {
-		call = call.Id(id)
+		call = call.Id(channelSlug)
 	} else {
-		call = call.ForUsername(id)
+		call = call.ForUsername(channelSlug)
 	}
 	response, err := call.Do()
 	handleError(err, "")
@@ -85,10 +85,29 @@ func FetchDetails(channelURL *util.URL) (util.Provider, error) {
 	channelName := ""
 	channelDescription := ""
 	channelSubscriberCount := uint64(0)
-	for _, item := range response.Items {
-		channelName = item.Snippet.Title
-		channelDescription = item.Snippet.Description
-		channelSubscriberCount = item.Statistics.SubscriberCount
+	channelVideos := make([]string, 0)
+	for _, channel := range response.Items {
+		channelName = channel.Snippet.Title
+		channelDescription = channel.Snippet.Description
+		channelSubscriberCount = channel.Statistics.SubscriberCount
+
+		playlistId := channel.ContentDetails.RelatedPlaylists.Uploads
+		nextPageToken := ""
+		for {
+			// Retrieve next set of items in the playlist.
+			playlistResponse := playlistItemsList(service, "snippet", playlistId, nextPageToken)
+
+			for _, playlistItem := range playlistResponse.Items {
+				channelVideos = append(channelVideos, playlistItem.Snippet.ResourceId.VideoId)
+			}
+
+			// Set the token to retrieve the next page of results
+			// or exit the loop if all results have been retrieved.
+			nextPageToken = playlistResponse.NextPageToken
+			if nextPageToken == "" {
+				break
+			}
+		}
 		break
 	}
 
@@ -96,9 +115,22 @@ func FetchDetails(channelURL *util.URL) (util.Provider, error) {
 		Description: channelDescription,
 		Name:        channelName,
 		URL:         channelURL,
-		Slug:        id,
+		Slug:        channelSlug,
 		Subscribers: channelSubscriberCount,
+		Videos:      channelVideos,
 	}, nil
+}
+
+// https://developers.google.com/youtube/v3/docs/playlistItems/list
+func playlistItemsList(service *youtube.Service, part string, playlistId string, pageToken string) *youtube.PlaylistItemListResponse {
+	call := service.PlaylistItems.List(part)
+	call = call.PlaylistId(playlistId)
+	if pageToken != "" {
+		call = call.PageToken(pageToken)
+	}
+	response, err := call.Do()
+	handleError(err, "")
+	return response
 }
 
 func fetchProfileImageURL(url *util.URL) (string, error) {
@@ -169,7 +201,7 @@ func importChannel(slug string, channelURL *util.URL, projectRoot string) {
 
 	channel, ok := channelList.Find(slug)
 	if ok {
-		log.Fatalf("Channel with slug '%s' already exists, use update instead.", slug)
+		log.Printf("Channel with slug '%s' already exists, updating.", slug)
 	}
 	channel.Name = importedChannel.Name
 	channel.Slug = importedChannel.Slug
@@ -194,9 +226,13 @@ func importChannel(slug string, channelURL *util.URL, projectRoot string) {
 
 	_ = util.CreateChannelVideoFolder(channel, projectRoot)
 
-	err = util.CreateChannelPage(channel, projectRoot)
-	if err != nil {
-		log.Printf("Unable to create channel page for %s, please create manually.", slug)
+	for _, videoId := range channel.Providers["youtube"].Videos {
+		err = ImportVideo(videoId, channel.Slug, projectRoot)
+
+
+		if err != nil {
+			log.Printf("Failed to import videos %s", videoId)
+		}
 	}
 }
 
@@ -244,11 +280,6 @@ func ImportVideo(id, creator, projectRoot string) error {
 	}
 	log.Printf("created video file %v", videoFile)
 
-	err = channel.GetChannelPage(projectRoot).AddVideo(id, projectRoot)
-	if err != nil {
-		return fmt.Errorf("couldn't update channel page: %v", err)
-	}
-
 	return nil
 }
 
@@ -259,6 +290,7 @@ type Video struct {
 	Description string
 	Source      string
 	Channel     string
+	PublishDate string
 }
 
 // GetVideo retreives video details from YouTube
@@ -279,6 +311,7 @@ func getVideo(videoID string) (*Video, error) {
 		ID:          resp.Items[0].Id,
 		Title:       resp.Items[0].Snippet.Title,
 		Description: resp.Items[0].Snippet.Description,
+		PublishDate: resp.Items[0].Snippet.PublishedAt,
 		Source:      "youtube",
 	}
 
